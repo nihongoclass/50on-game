@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>50音打地鼠</title>
+<style>
+:root{--ink:#443653;--muted:#766d82;--pink:#ff79a7;--lav:#a98cff;--mint:#7fdab4;--card:#ffffffef;--shadow:0 18px 45px rgba(76,57,98,.15)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--ink);background:radial-gradient(circle at 8% 8%,#ffe1ec 0,transparent 25%),radial-gradient(circle at 92% 7%,#e6dcff 0,transparent 27%),linear-gradient(145deg,#fff9ef,#eef9ff);touch-action:manipulation}.hidden{display:none!important}.center{min-height:100vh;display:grid;place-items:center;padding:16px}.card{background:var(--card);border-radius:28px;box-shadow:var(--shadow);border:1px solid #fff}.login,.wait,.result{width:min(520px,100%);padding:28px;text-align:center}h1{margin:8px 0;font-size:clamp(30px,7vw,44px)}.sub{color:var(--muted);line-height:1.55}.hero{font-size:76px}.name{width:100%;border:2px solid #e5dce9;border-radius:18px;padding:14px 16px;font-size:20px;font-weight:900;outline:none;margin:15px 0 10px}.btn{border:0;border-radius:18px;padding:14px 18px;font-weight:1000;cursor:pointer}.primary{background:var(--pink);color:white;width:100%}.sound{background:#efe8ff;color:#594b72;width:100%;margin-top:9px}.pill{display:inline-flex;padding:8px 12px;border-radius:999px;background:#f3eef7;font-weight:900}.game{width:min(760px,100%);padding:10px 12px 22px;margin:auto}.topbar{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:9px}.timer{font-size:30px;font-weight:1000}.score{font-size:25px;font-weight:1000;color:#e35c86}.target{background:white;border-radius:20px;box-shadow:0 8px 18px rgba(80,59,99,.08);padding:10px 14px;text-align:center;margin-bottom:10px}.target small{display:block;color:var(--muted);font-weight:900}.kanaTarget{font-size:clamp(58px,16vw,90px);font-weight:1000;line-height:1.15}.speaker{border:0;border-radius:999px;background:#eee8ff;color:#594b72;padding:8px 14px;font-weight:900;cursor:pointer}.field{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:#dff4ce;padding:12px;border-radius:28px;box-shadow:inset 0 -10px 0 rgba(79,125,64,.08)}.hole{position:relative;aspect-ratio:1.05;border:0;border-radius:50%;background:#7b583d;box-shadow:inset 0 9px 0 rgba(0,0,0,.13),0 4px 0 #b6da9e;overflow:hidden;padding:0;cursor:pointer}.mole{position:absolute;left:9%;right:9%;bottom:-8%;height:83%;border-radius:46% 46% 35% 35%;background:linear-gradient(#ffd98d,#f7b96d);display:flex;align-items:center;justify-content:center;font-size:clamp(42px,13vw,72px);font-weight:1000;color:#4c3c38;transform:translateY(100%);transition:transform .11s ease-out;box-shadow:inset 0 -8px 0 rgba(169,103,51,.13)}.hole.up .mole{transform:translateY(0)}.feedback{height:32px;display:grid;place-items:center;font-size:18px;font-weight:1000}.good{color:#2d9b64}.bad{color:#e05b64}.finalscore{font-size:76px;font-weight:1000;color:#e45f88}.soundnote{font-size:13px;color:var(--muted);margin-top:7px}
+</style>
+</head>
+<body>
+<div id="join" class="center">
+<section class="card login">
+<div class="hero">🐹🔨</div><h1>50音打地鼠</h1>
+<p class="sub">輸入名字。遊戲開始後，畫面會直接顯示平假名並念出日文發音，請打中相同的平假名。</p>
+<input id="name" class="name" maxlength="12" placeholder="請輸入你的名字">
+<button id="joinBtn" class="btn primary">加入遊戲</button>
+<button id="soundBtn" class="btn sound">🔊 先測試日文發音</button>
+<div id="msg" class="sub"></div>
+</section>
+</div>
+
+<div id="waiting" class="center hidden"><section class="card wait"><div class="hero">🐹🌱</div><h1>已加入！</h1><p class="sub">請等主持人按開始。</p><div id="who" class="pill"></div><p class="soundnote">如果剛才有聽到「あ」的聲音，遊戲發音就準備好了。</p></section></div>
+
+<main id="game" class="game hidden">
+<div class="topbar"><span id="pname" class="pill"></span><span id="timer" class="timer">01:00</span><span id="score" class="score">0分</span></div>
+<div class="target"><small>請打中這個平假名</small><div id="target" class="kanaTarget">あ</div><button id="repeat" class="speaker">🔊 再聽一次</button></div>
+<div id="field" class="field"></div>
+<div id="feedback" class="feedback"></div>
+</main>
+
+<div id="result" class="center hidden"><section class="card result"><div class="hero">🎉</div><h1>時間到！</h1><div id="final" class="finalscore">0分</div><p class="sub">請看主持人畫面的全班排名。</p></section></div>
+
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script>
+const K=['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ','た','ち','つ','て','と','な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ','ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ','わ','を','ん'];
+firebase.initializeApp(window.FIREBASE_CONFIG||{});const db=firebase.database(),q=new URLSearchParams(location.search),room=q.get('room')||'',E=id=>document.getElementById(id);
+let pid=null,nm='',score=0,target='あ',choices=[],running=false,endAt=0,tickTimer=null,popTimer=null,audioUnlocked=false;
+function view(x){['join','waiting','game','result'].forEach(id=>E(id).classList.add('hidden'));E(x).classList.remove('hidden')}
+function speak(k){
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(k);u.lang='ja-JP';u.rate=.82;u.pitch=1.05;u.volume=1;
+    const vs=speechSynthesis.getVoices();const ja=vs.find(v=>/^ja(-|_)/i.test(v.lang));if(ja)u.voice=ja;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+E('soundBtn').onclick=()=>{audioUnlocked=true;speak('あ')};
+async function join(){
+  nm=E('name').value.trim();if(!nm){E('msg').textContent='請先輸入名字喔！';return}
+  if(!room){E('msg').textContent='找不到房間碼，請重新掃 QR Code。';return}
+  const rs=await db.ref('rooms/'+room).once('value');if(!rs.exists()){E('msg').textContent='找不到這個房間。';return}
+  const r=db.ref('rooms/'+room+'/players').push();pid=r.key;await r.set({name:nm,score:0,joinedAt:firebase.database.ServerValue.TIMESTAMP});r.onDisconnect().remove();
+  E('who').textContent=nm+'｜房間 '+room;E('pname').textContent=nm;view('waiting');
+  db.ref('rooms/'+room).on('value',s=>{const x=s.val()||{};if(x.status==='running'&&!running)start(x);if(x.status==='finished'&&running)finish();if(x.status==='waiting'&&!running&&pid)view('waiting')});
+}
+E('joinBtn').onclick=join;E('name').addEventListener('keydown',e=>{if(e.key==='Enter')join()});
+function setup(){E('field').innerHTML='';for(let i=0;i<9;i++){const b=document.createElement('button');b.className='hole';b.innerHTML='<div class="mole"><span class="k"></span></div>';b.onclick=()=>hit(i);E('field').appendChild(b)}}
+function newTarget(){target=K[Math.floor(Math.random()*K.length)];E('target').textContent=target;speak(target)}
+function makeChoices(){const set=new Set([target]);while(set.size<9)set.add(K[Math.floor(Math.random()*K.length)]);choices=[...set].sort(()=>Math.random()-.5)}
+function pop(){if(!running)return;makeChoices();const holes=[...E('field').children];holes.forEach((h,i)=>{h.classList.remove('up');h.querySelector('.k').textContent=choices[i]});setTimeout(()=>holes.forEach(h=>h.classList.add('up')),25);clearTimeout(popTimer);popTimer=setTimeout(pop,760)}
+function hit(i){if(!running)return;if(choices[i]===target){score+=5;E('score').textContent=score+'分';E('feedback').textContent='答對！+5';E('feedback').className='feedback good';db.ref('rooms/'+room+'/players/'+pid+'/score').set(score);newTarget();pop()}else{E('feedback').textContent='不是這個，再找找！';E('feedback').className='feedback bad'}setTimeout(()=>E('feedback').textContent='',330)}
+function start(r){running=true;score=0;E('score').textContent='0分';endAt=Number(r.endAt)||Date.now()+60000;view('game');setup();newTarget();pop();clearInterval(tickTimer);tickTimer=setInterval(()=>{const s=Math.max(0,Math.ceil((endAt-Date.now())/1000));E('timer').textContent='00:'+String(s).padStart(2,'0');if(s<=0)finish()},120)}
+function finish(){if(!running)return;running=false;clearInterval(tickTimer);clearTimeout(popTimer);speechSynthesis.cancel();E('final').textContent=score+'分';view('result')}
+E('repeat').onclick=()=>speak(target);setup();
+</script>
+</body>
+</html>
